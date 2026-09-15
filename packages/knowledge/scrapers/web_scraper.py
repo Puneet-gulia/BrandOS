@@ -28,8 +28,20 @@ class WebScraper:
         Raises:
             ExtractionError: If the request fails or parsing fails.
         """
+        headers = {
+            "User-Agent": (
+                "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/120.0.0.0 Safari/537.36"
+            ),
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.9",
+        }
         try:
-            async with httpx.AsyncClient(timeout=self.settings.scraper_timeout_seconds) as client:
+            async with httpx.AsyncClient(
+                timeout=self.settings.scraper_timeout_seconds,
+                headers=headers,
+            ) as client:
                 response = await client.get(url, follow_redirects=True)
                 response.raise_for_status()
                 html = response.text
