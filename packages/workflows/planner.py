@@ -113,9 +113,10 @@ class CampaignPlanner:
                 ),
             )
         except LLMError as exc:
+            detail_msg = f"{exc.message} ({exc.detail})" if exc.detail else exc.message
             raise OrchestrationError(
-                message="Campaign planning failed — LLM returned an error",
-                detail=str(exc),
+                message="Campaign planning failed",
+                detail=detail_msg,
             ) from exc
 
         # Validate the strategy makes sense before returning it
