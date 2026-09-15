@@ -94,8 +94,8 @@ class LLMClient:
         
         @retry(
             retry=retry_if_exception_type((RateLimitError, APIConnectionError)),
-            stop=stop_after_attempt(self._max_retries),
-            wait=wait_exponential(multiplier=1, min=2, max=30),
+            stop=stop_after_attempt(6),
+            wait=wait_exponential(multiplier=2, min=3, max=40),
             before_sleep=before_sleep_log(logger, logging.WARNING),
             reraise=False,
         )
