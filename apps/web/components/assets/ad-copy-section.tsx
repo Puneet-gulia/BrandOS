@@ -57,3 +57,4 @@ export function AdCopySection({ variants }: { variants: AdVariant[] }) {
       ))}
     </div>
   );
+}

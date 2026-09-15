@@ -143,3 +143,4 @@ export function LandingPageSection({ copy }: { copy: LandingPageCopy }) {
       </section>
     </div>
   );
+}

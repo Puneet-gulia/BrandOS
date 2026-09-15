@@ -60,3 +60,4 @@ export function ImagePromptsSection({ prompts }: { prompts: ImagePromptItem[] })
       </div>
     </div>
   );
+}
