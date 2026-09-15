@@ -63,4 +63,4 @@ export function EmailCampaignsSection({ emails }: { emails: EmailCampaign[] }) {
       ))}
     </div>
   );
-}
+

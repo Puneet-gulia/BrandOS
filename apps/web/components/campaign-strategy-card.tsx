@@ -137,4 +137,4 @@ export function CampaignStrategyCard({ strategy }: CampaignStrategyCardProps) {
       </div>
     </div>
   );
-}
+

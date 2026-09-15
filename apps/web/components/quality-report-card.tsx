@@ -167,4 +167,4 @@ function DimensionCard({ score }: { score: QualityScore }) {
       </CardContent>
     </Card>
   );
-}
+

@@ -85,4 +85,4 @@ export function SocialPostsSection({ posts }: { posts: SocialMediaPost[] }) {
       </div>
     </div>
   );
-}
+
