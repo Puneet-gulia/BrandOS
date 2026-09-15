@@ -98,6 +98,61 @@ class LLMClient:
                 detail=f"Raw response: {raw[:500]}",
             ) from exc
 
+    async def complete_structured_list(
+        self,
+        prompt: str,
+        item_model: Type[T],
+        model: str | None = None,
+        system_prompt: str | None = None,
+    ) -> list[T]:
+        """Send a prompt and parse the response into a list of Pydantic models.
+
+        Handles JSON arrays [...], wrapped JSON objects {"items": [...]},
+        markdown codeblocks, and conversational wrapper text.
+        """
+        schema_instruction = (
+            f"You MUST respond with valid JSON only (either a JSON array [...] or JSON object containing an array field). "
+            f"No markdown, no explanation. Each item in the array must conform to this schema:\n"
+            f"{json.dumps(item_model.model_json_schema(), indent=2)}"
+        )
+        full_system = f"{system_prompt}\n\n{schema_instruction}" if system_prompt else schema_instruction
+        raw = await self._call_with_retry(prompt=prompt, model=model, system_prompt=full_system)
+
+        try:
+            import re
+            cleaned = raw.strip()
+            if "```" in cleaned:
+                parts = cleaned.split("```")
+                for p in parts:
+                    p_clean = p.strip()
+                    if p_clean.startswith("json"):
+                        p_clean = p_clean[4:].strip()
+                    if (p_clean.startswith("{") and p_clean.endswith("}")) or (p_clean.startswith("[") and p_clean.endswith("]")):
+                        cleaned = p_clean
+                        break
+            if not (cleaned.startswith("{") or cleaned.startswith("[")):
+                m = re.search(r"(\{.*\}|\[.*\])", cleaned, re.DOTALL)
+                if m:
+                    cleaned = m.group(1)
+
+            data = json.loads(cleaned)
+            if isinstance(data, list):
+                items = data
+            elif isinstance(data, dict):
+                items = next((val for val in data.values() if isinstance(val, list)), None)
+                if items is None:
+                    raise ValueError(f"Expected a JSON array or object containing an array, got dict keys {list(data.keys())}")
+            else:
+                raise ValueError(f"Expected JSON list or dict, got {type(data)}")
+
+            return [item_model.model_validate(item) for item in items]
+        except (json.JSONDecodeError, Exception) as exc:
+            logger.error("Structured list parsing failed: %s | Raw LLM output: %s", exc, raw[:500])
+            raise LLMError(
+                message=f"Failed to parse structured LLM list response: {exc}",
+                detail=f"Raw response: {raw[:500]}",
+            ) from exc
+
     async def _call_with_retry(self, prompt: str, model: str | None = None, system_prompt: str | None = None) -> str:
         """Internal call with tenacity retry logic."""
         selected_model = model or self._model

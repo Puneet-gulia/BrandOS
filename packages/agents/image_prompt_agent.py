@@ -44,20 +44,16 @@ class ImagePromptAgent(BaseAgent):
                 brand_profile=json.dumps(brand_profile.model_dump(mode="json"), indent=2),
                 campaign_strategy=json.dumps(campaign_strategy.model_dump(mode="json"), indent=2),
             )
-            raw = await self._llm_client.complete(
+            return await self._llm_client.complete_structured_list(
                 prompt=prompt,
+                item_model=ImagePromptItem,
                 system_prompt="You are a professional creative director. Respond only with valid JSON array.",
             )
-            cleaned = raw.strip()
-            if cleaned.startswith("```"):
-                cleaned = cleaned.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-            import json as _json
-            items = _json.loads(cleaned)
-            return [ImagePromptItem.model_validate(item) for item in items]
         except LLMError as exc:
+            detail_msg = f"{exc.message} ({exc.detail})" if exc.detail else exc.message
             raise OrchestrationError(
                 "ImagePromptAgent failed to generate image prompts",
-                detail=str(exc),
+                detail=detail_msg,
             ) from exc
         except Exception as exc:
             raise OrchestrationError(

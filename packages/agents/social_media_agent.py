@@ -61,21 +61,16 @@ class SocialMediaAgent(BaseAgent):
                 platforms=platforms_str,
             )
             # Wrap in an object so complete_structured can parse the list
-            raw = await self._llm_client.complete(
+            return await self._llm_client.complete_structured_list(
                 prompt=prompt,
+                item_model=SocialMediaPost,
                 system_prompt="You are a professional social media copywriter. Respond only with valid JSON array.",
             )
-            # Parse the raw JSON array
-            cleaned = raw.strip()
-            if cleaned.startswith("```"):
-                cleaned = cleaned.split("\n", 1)[1].rsplit("```", 1)[0].strip()
-            import json as _json
-            items = _json.loads(cleaned)
-            return [SocialMediaPost.model_validate(item) for item in items]
         except LLMError as exc:
+            detail_msg = f"{exc.message} ({exc.detail})" if exc.detail else exc.message
             raise OrchestrationError(
                 "SocialMediaAgent failed to generate posts",
-                detail=str(exc),
+                detail=detail_msg,
             ) from exc
         except Exception as exc:
             raise OrchestrationError(
