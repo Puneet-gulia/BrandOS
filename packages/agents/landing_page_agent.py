@@ -38,11 +38,15 @@ class LandingPageAgent(BaseAgent):
         """
         self._logger.info("Generating landing page copy")
 
+        constraints = kwargs.get("constraints", [])
+        constraints_str = "\n".join(constraints) if isinstance(constraints, list) and constraints else "None"
+
         try:
             prompt = self._prompt_loader.load(
                 self.PROMPT_TEMPLATE,
                 brand_profile=json.dumps(brand_profile.model_dump(mode="json"), indent=2),
                 campaign_strategy=json.dumps(campaign_strategy.model_dump(mode="json"), indent=2),
+                constraints=constraints_str,
             )
             
             result = await self._llm_client.complete_structured(

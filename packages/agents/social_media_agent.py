@@ -53,12 +53,16 @@ class SocialMediaAgent(BaseAgent):
 
         self._logger.info("Generating social media posts for platforms: %s", platforms_str)
 
+        constraints = kwargs.get("constraints", [])
+        constraints_str = "\n".join(constraints) if isinstance(constraints, list) and constraints else "None"
+
         try:
             prompt = self._prompt_loader.load(
                 self.PROMPT_TEMPLATE,
                 brand_profile=json.dumps(brand_profile.model_dump(mode="json"), indent=2),
                 campaign_strategy=json.dumps(campaign_strategy.model_dump(mode="json"), indent=2),
                 platforms=platforms_str,
+                constraints=constraints_str,
             )
             # Wrap in an object so complete_structured can parse the list
             return await self._llm_client.complete_structured_list(

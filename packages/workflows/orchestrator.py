@@ -149,6 +149,7 @@ class CampaignOrchestrator:
                 brand_profile=brand_profile,
                 campaign_strategy=strategy,
                 channels=channels,
+                campaign_brief=brief,
             )
         except Exception as exc:
             raise OrchestrationError(
