@@ -11,12 +11,8 @@ from pydantic import BaseModel, Field
 from packages.shared.models.assets import (
     SocialMediaPost, AdVariant, EmailCampaign, LandingPageCopy, ImagePromptItem
 )
-
-if TYPE_CHECKING:
-    from packages.shared.models.evaluation import QualityReport
-
-
 from packages.shared.models.brand import BrandProfile
+from packages.shared.models.evaluation import QualityReport
 
 
 class MarketingChannel(str, Enum):
@@ -80,7 +76,7 @@ class CampaignPackage(BaseModel):
     campaign_brief: CampaignBrief
     campaign_strategy: Optional[CampaignStrategy] = None
     campaign_assets: Optional[CampaignAssets] = None
-    quality_report: Optional[QualityReport] = None  # type: ignore[name-defined]
+    quality_report: Optional[QualityReport] = None
     status: str = "draft"
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
