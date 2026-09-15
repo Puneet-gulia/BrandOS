@@ -134,4 +134,4 @@ export function BrandInputForm({ onSuccess }: BrandInputFormProps) {
       </CardContent>
     </Card>
   )
-}\n
+}

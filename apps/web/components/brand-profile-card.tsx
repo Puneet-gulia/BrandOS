@@ -66,4 +66,4 @@ export function BrandProfileCard({ profile }: BrandProfileCardProps) {
       </CardContent>
     </Card>
   )
-}\n
+}
