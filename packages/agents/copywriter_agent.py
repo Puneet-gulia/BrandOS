@@ -3,12 +3,11 @@ CopywriterAgent — generates high-converting ad variants.
 """
 from __future__ import annotations
 
-import json
 from typing import Any
 
 from pydantic import BaseModel
 
-from packages.agents.base import BaseAgent
+from packages.agents.base import CREATIVE_TEMPERATURE, BaseAgent
 from packages.shared.errors import LLMError, OrchestrationError
 from packages.shared.models.assets import AdVariant
 from packages.shared.models.brand import BrandProfile
@@ -40,20 +39,22 @@ class CopywriterAgent(BaseAgent):
         """
         self._logger.info("Generating ad copy variants")
 
-        constraints = kwargs.get("constraints", [])
-        constraints_str = "\n".join(constraints) if isinstance(constraints, list) and constraints else "None"
+        constraints = kwargs.get("constraints")
 
         try:
-            prompt = self._prompt_loader.load(
+            prompt = self._build_prompt(
                 self.PROMPT_TEMPLATE,
-                brand_profile=json.dumps(brand_profile.model_dump(mode="json"), indent=2),
-                campaign_strategy=json.dumps(campaign_strategy.model_dump(mode="json"), indent=2),
-                constraints=constraints_str,
+                brand_profile,
+                campaign_strategy,
+                campaign_brief=kwargs.get("campaign_brief"),
+                constraints=constraints,
             )
             return await self._llm_client.complete_structured_list(
                 prompt=prompt,
                 item_model=AdVariant,
                 system_prompt="You are a professional copywriter. Respond only with valid JSON array.",
+                model=self._model,
+                temperature=CREATIVE_TEMPERATURE,
             )
         except LLMError as exc:
             detail_msg = f"{exc.message} ({exc.detail})" if exc.detail else exc.message

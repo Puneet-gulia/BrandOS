@@ -93,24 +93,24 @@ class CreativeService:
         # Channel-routed agents
         if MarketingChannel.SOCIAL_MEDIA in channels:
             social_posts = await self._social_media_agent.generate(
-                brand_profile, campaign_strategy, platforms=["Instagram", "LinkedIn", "Facebook"], constraints=constraints_list
+                brand_profile, campaign_strategy, platforms=["Instagram", "LinkedIn", "Facebook"], constraints=constraints_list, campaign_brief=campaign_brief
             )
             logger.info("Generated %d social media posts", len(social_posts))
 
         if MarketingChannel.PAID_ADS in channels:
-            ad_copy = await self._copywriter_agent.generate(brand_profile, campaign_strategy, constraints=constraints_list)
+            ad_copy = await self._copywriter_agent.generate(brand_profile, campaign_strategy, constraints=constraints_list, campaign_brief=campaign_brief)
             logger.info("Generated %d ad variants", len(ad_copy))
 
         if MarketingChannel.EMAIL in channels:
-            emails = await self._email_agent.generate(brand_profile, campaign_strategy, constraints=constraints_list)
+            emails = await self._email_agent.generate(brand_profile, campaign_strategy, constraints=constraints_list, campaign_brief=campaign_brief)
             logger.info("Generated %d email campaigns", len(emails))
 
         if MarketingChannel.LANDING_PAGE in channels:
-            landing_page = await self._landing_page_agent.generate(brand_profile, campaign_strategy, constraints=constraints_list)
+            landing_page = await self._landing_page_agent.generate(brand_profile, campaign_strategy, constraints=constraints_list, campaign_brief=campaign_brief)
             logger.info("Generated landing page copy")
 
         # Always generate image prompts
-        image_prompts = await self._image_prompt_agent.generate(brand_profile, campaign_strategy, constraints=constraints_list)
+        image_prompts = await self._image_prompt_agent.generate(brand_profile, campaign_strategy, constraints=constraints_list, campaign_brief=campaign_brief)
         logger.info("Generated %d image prompts", len(image_prompts))
 
         return CampaignAssets(

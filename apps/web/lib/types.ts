@@ -23,6 +23,7 @@ export interface BrandProfile {
   tone: string;
   competitors: string[];
   raw_input_summary: string;
+  voice_samples?: string[];
   created_at: string;
 }
 

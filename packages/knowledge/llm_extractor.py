@@ -26,6 +26,7 @@ class BrandProfileLLMOutput(BaseModel):
     tone: str
     competitors: list[str] = []
     raw_input_summary: str
+    voice_samples: list[str] = []
 
 
 class LLMBrandExtractor:
@@ -70,6 +71,7 @@ class LLMBrandExtractor:
                 tone=output.tone,
                 competitors=output.competitors,
                 raw_input_summary=output.raw_input_summary,
+                voice_samples=output.voice_samples,
             )
         except LLMError as exc:
             raise ExtractionError("Failed to extract brand profile using LLM", detail=str(exc)) from exc

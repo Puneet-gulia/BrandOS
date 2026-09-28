@@ -35,6 +35,10 @@ class Settings(BaseSettings):
         default="openai/gpt-4o-mini",
         description="Default LLM model identifier",
     )
+    openrouter_creative_model: str = Field(
+        default="",
+        description="Model used by the creative writing agents. Empty = use the default model.",
+    )
 
     # API Server
     api_host: str = Field(default="0.0.0.0")

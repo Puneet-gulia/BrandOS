@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 import logging
+import re
 from typing import Any, Type, TypeVar
 
 import httpx
@@ -55,11 +56,11 @@ class LLMClient:
         )
         self._max_retries = settings.llm_max_retries
 
-    async def complete(self, prompt: str, model: str | None = None, system_prompt: str | None = None) -> str:
+    async def complete(self, prompt: str, model: str | None = None, system_prompt: str | None = None, temperature: float | None = None) -> str:
         """Send a prompt and return the raw text response."""
-        return await self._call_with_retry(prompt=prompt, model=model, system_prompt=system_prompt)
+        return await self._call_with_retry(prompt=prompt, model=model, system_prompt=system_prompt, temperature=temperature)
 
-    async def complete_structured(self, prompt: str, response_model: Type[T], model: str | None = None, system_prompt: str | None = None) -> T:
+    async def complete_structured(self, prompt: str, response_model: Type[T], model: str | None = None, system_prompt: str | None = None, temperature: float | None = None) -> T:
         """Send a prompt and parse the response into a Pydantic model.
         
         The LLM is instructed to respond with valid JSON matching the model schema.
@@ -70,7 +71,7 @@ class LLMClient:
             f"The JSON must conform to this schema:\n{json.dumps(response_model.model_json_schema(), indent=2)}"
         )
         full_system = f"{system_prompt}\n\n{schema_instruction}" if system_prompt else schema_instruction
-        raw = await self._call_with_retry(prompt=prompt, model=model, system_prompt=full_system)
+        raw = await self._call_with_retry(prompt=prompt, model=model, system_prompt=full_system, temperature=temperature)
         try:
             import re
             cleaned = raw.strip()
@@ -104,6 +105,7 @@ class LLMClient:
         item_model: Type[T],
         model: str | None = None,
         system_prompt: str | None = None,
+        temperature: float | None = None,
     ) -> list[T]:
         """Send a prompt and parse the response into a list of Pydantic models.
 
@@ -116,7 +118,7 @@ class LLMClient:
             f"{json.dumps(item_model.model_json_schema(), indent=2)}"
         )
         full_system = f"{system_prompt}\n\n{schema_instruction}" if system_prompt else schema_instruction
-        raw = await self._call_with_retry(prompt=prompt, model=model, system_prompt=full_system)
+        raw = await self._call_with_retry(prompt=prompt, model=model, system_prompt=full_system, temperature=temperature)
 
         try:
             import re
@@ -153,31 +155,36 @@ class LLMClient:
                 detail=f"Raw response: {raw[:500]}",
             ) from exc
 
-    async def _call_with_retry(self, prompt: str, model: str | None = None, system_prompt: str | None = None) -> str:
+    async def _call_with_retry(self, prompt: str, model: str | None = None, system_prompt: str | None = None, temperature: float | None = None) -> str:
         """Internal call with tenacity retry logic."""
         selected_model = model or self._model
         messages: list[dict[str, str]] = []
         if system_prompt:
             messages.append({"role": "system", "content": system_prompt})
         messages.append({"role": "user", "content": prompt})
+        extra_params: dict[str, Any] = {}
+        if temperature is not None:
+            extra_params["temperature"] = temperature
         
         @retry(
             retry=retry_if_exception_type((RateLimitError, APIConnectionError)),
             stop=stop_after_attempt(6),
             wait=wait_exponential(multiplier=2, min=3, max=40),
             before_sleep=before_sleep_log(logger, logging.WARNING),
-            reraise=False,
+            reraise=True,
         )
         async def _attempt() -> str:
             try:
                 response = await self._client.chat.completions.create(
                     model=selected_model,
                     messages=messages,  # type: ignore[arg-type]
+                    **extra_params,
                 )
                 content = response.choices[0].message.content
                 if content is None:
                     raise LLMError("LLM returned empty content")
-                return content
+                # Reasoning models (e.g. Qwen3) may inline their thinking; drop it before parsing.
+                return re.sub(r"<think>.*?</think>", "", content, flags=re.DOTALL).strip()
             except RateLimitError as exc:
                 logger.warning("Rate limited by LLM API, will retry: %s", exc)
                 raise

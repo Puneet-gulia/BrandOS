@@ -50,4 +50,5 @@ class BrandProfile(BaseModel):
     tone: str
     competitors: list[str] = Field(default_factory=list)
     raw_input_summary: str
+    voice_samples: list[str] = Field(default_factory=list)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))

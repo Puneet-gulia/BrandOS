@@ -3,10 +3,9 @@ LandingPageAgent — generates full landing page copy.
 """
 from __future__ import annotations
 
-import json
 from typing import Any
 
-from packages.agents.base import BaseAgent
+from packages.agents.base import CREATIVE_TEMPERATURE, BaseAgent
 from packages.shared.errors import LLMError, OrchestrationError
 from packages.shared.models.assets import LandingPageCopy
 from packages.shared.models.brand import BrandProfile
@@ -38,21 +37,23 @@ class LandingPageAgent(BaseAgent):
         """
         self._logger.info("Generating landing page copy")
 
-        constraints = kwargs.get("constraints", [])
-        constraints_str = "\n".join(constraints) if isinstance(constraints, list) and constraints else "None"
+        constraints = kwargs.get("constraints")
 
         try:
-            prompt = self._prompt_loader.load(
+            prompt = self._build_prompt(
                 self.PROMPT_TEMPLATE,
-                brand_profile=json.dumps(brand_profile.model_dump(mode="json"), indent=2),
-                campaign_strategy=json.dumps(campaign_strategy.model_dump(mode="json"), indent=2),
-                constraints=constraints_str,
+                brand_profile,
+                campaign_strategy,
+                campaign_brief=kwargs.get("campaign_brief"),
+                constraints=constraints,
             )
             
             result = await self._llm_client.complete_structured(
                 prompt=prompt,
                 response_model=LandingPageCopy,
                 system_prompt="You are a professional landing page copywriter. Respond only with valid JSON.",
+                model=self._model,
+                temperature=CREATIVE_TEMPERATURE,
             )
             return result
         except LLMError as exc:

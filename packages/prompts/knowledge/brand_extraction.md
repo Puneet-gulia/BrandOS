@@ -26,7 +26,8 @@ Analyze the following brand content and extract a complete brand profile:
 8. Articulate the unique selling proposition — what makes this brand different?
 9. Determine the overall tone: professional, casual, inspirational, bold, empathetic, playful, authoritative.
 10. Note any competitor mentions if present.
-11. Write a one-paragraph summary of what you analyzed.
+11. Write a one-paragraph summary of what you analyzed. Include concrete facts the creative team can use: products, features, numbers, prices, places, customer situations.
+12. Copy 5-8 **voice samples**: sentences or headlines taken word-for-word from the content that best show how this brand writes (marketing copy, headlines, product descriptions — not navigation, legal text or cookie banners). Do not paraphrase or invent them. If the content has no usable copy, return an empty list.
 
 ## Output Format
 
@@ -45,6 +46,7 @@ Respond ONLY with valid JSON matching this exact structure. No other text.
   "unique_selling_proposition": "string",
   "tone": "string",
   "competitors": [],
-  "raw_input_summary": "string"
+  "raw_input_summary": "string",
+  "voice_samples": ["exact sentence from the content", "exact headline from the content"]
 }
 ```
